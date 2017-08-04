@@ -132,17 +132,18 @@ def updated() {
 }
 
 def initialize() {
-    atomicState.sensorURIs = [:]
-    def metaSensor = atomicState.sensorURIs
+    // map of capability:uri pairs
+    atomicState.URIs = [:]
+    def metaSensor = atomicState.URIs
     atomicState.sensorCaps = [:]
 
     //doCheck(metaSensor)
     generateSML(metaSensor)
 
-    atomicState.sensorURIs = metaSensor
+    atomicState.URIs = metaSensor
 
     // Check SensorMap
-    log.trace "Printing sensor map" + atomicState.sensorURIs
+    log.trace "Printing sensor map" + atomicState.URIs
 
     // Subscribe to events
     log.info settings.motiondevices
@@ -266,6 +267,7 @@ def generateDescriptionSML(theSensor, currCapability) {
 // allow the sensor to send data to SOS
 // generate SML desc based on capability
 def generateResultTemplate(sensor){
+    // TODO: add name to each output based on capability
     log.debug "[ln:268]Capabilities: " + sensor.getCapabilities()
     def description = ""
     def capMap = atomicState.sensorCaps
@@ -273,6 +275,7 @@ def generateResultTemplate(sensor){
 
     log.info "[ln:274]Capability Name: " + capability
     switch(capability){
+        // TODO: Above <swe:field name="{sensorName}"> add  <sml:output name="{capabilityName}">
         case "Contact Sensor":
         description += '''<swe:field name="contact">
                 <swe:Category definition="http://sensorml.com/ont/swe/property/ContactSensor">
@@ -418,7 +421,7 @@ def monthConvert(month){
 }
 
 
-def generateSML(metaSensor){
+def generateSML(){
 
     //def allDevices = []
 
@@ -435,9 +438,9 @@ def generateSML(metaSensor){
                         body: generateInsertSML(x.getLabel()),
                         requestContentType: 'application/xml'
                 ]
-                insertSensor(params, metaSensor)
+                insertSensor(params)
                 for (currCapability in x.getCapabilities()){
-                	insertResultTemplate(x, metaSensor, currCapability)
+                	insertResultTemplate(x, currCapability)
                 }
 
             }
@@ -447,7 +450,7 @@ def generateSML(metaSensor){
 }
 
 // Handle inserting sensor into OSH via SOS-T
-def insertSensor(params, metaSensor) {
+def insertSensor(params) {
 
     //log.trace "Params: " + params
 
@@ -460,41 +463,51 @@ def insertSensor(params, metaSensor) {
     } catch (e) {
         log.error "Adding sensor failed: $e"
     }
-    log.trace "Sensor description: " + metaSensor
+    //log.trace "Sensor description: " + metaSensor
 }
 
 
 
 // Handle inserting a sensor's result template via SOS-T
-def insertResultTemplate(sensorName, metaSensor) {
+def insertResultTemplate(sensorName) {
+    
+    def URIs = atomicState.URIs
+    def sensorURIs = []
     log.trace "[ln:541]sensorCapability (insertResultTemplate): " + sensorName.getCapabilities()
-    try {
-        def paramsRequest = [
-                //uri: 'http://146.148.39.135:8181/sensorhub/sos',
-                uri: endpoint,
-                body: generateDescriptionSML(sensorName),
-                requestContentType: 'application/xml'
-        ]
-        httpPost(paramsRequest) { resp2 ->
-            resp2.headers.each {
-                //log.info "${it.name} : ${it.value}"
+    
+    for(capability in sensorName.getCapabilities()){
+        try {
+            def paramsRequest = [
+                    //uri: 'http://146.148.39.135:8181/sensorhub/sos',
+                    uri: endpoint,
+                    body: generateDescriptionSML(sensorName, capability),
+                    requestContentType: 'application/xml'
+            ]
+            httpPost(paramsRequest) { resp2 ->
+                resp2.headers.each {
+                    //log.info "${it.name} : ${it.value}"
+                }
+
+                log.debug "response data: ${resp2.data}"
+
+                String data = resp2.data
+                sensorURIs.add(data)
+                URIs.put(capability.getName(), sensorURIs)
             }
-
-            log.debug "response data: ${resp2.data}"
-
-            String data = resp2.data
-            metaSensor.put(sensorName,data)
-            log.trace 'MetaSensor data' +  metaSensor
+        } catch (e) {
+            log.error "Adding Request Template failed: $e"
         }
-    } catch (e) {
-        log.error "Adding Request Template failed: $e"
     }
+    log.trace 'MetaSensor data: ' +  URIs
+    URIs.put(sensorName, sensorURIs)
+    atomicState.URIs = URIs
+    log.debug "Current URI map: " + atomicState.URIs
 }
 
 
 // schedule data polling (is executed once per minute)
 def scheduleHandler(){
-    def sensors = atomicState.sensorURIs
+    def sensors = atomicState.URIs
     def capMap = atomicState.sensorCaps
 
     [motiondevices, humiditydevices, leakdevices, thermodevices, tempdevices, contactdevices,
@@ -531,7 +544,7 @@ def scheduleHandler(){
                         //uri: 'http://146.148.39.135:8181/sensorhub/sos',
                         uri: endpoint,
                 		body: '''<sos:InsertResult xmlns:sos="http://www.opengis.net/sos/2.0" service="SOS" version="2.0.0">
-    						<sos:template>''' + atomicState.sensorURIs.getAt(x.getLabel()) + '''</sos:template>
+    						<sos:template>''' + atomicState.URIs.getAt(x.getLabel()) + '''</sos:template>
    							<sos:resultValues>''' + time + ',' + dataString  + '''</sos:resultValues>
     						</sos:InsertResult>''',
                 		requestContentType: 'application/xml'
@@ -556,7 +569,7 @@ def scheduleHandler(){
 
 // schedule data polling (is executed on event)
 def scheduleHandler(evt){
-    def sensors = atomicState.sensorURIs
+    def sensors = atomicState.URIs
     def capMap = atomicState.sensorCaps
 
     [motiondevices, humiditydevices, leakdevices, thermodevices, tempdevices, contactdevices,
@@ -595,7 +608,7 @@ def scheduleHandler(evt){
                     //uri: 'http://146.148.39.135:8181/sensorhub/sos',
                     uri: endpoint,
                     body: '''<sos:InsertResult xmlns:sos="http://www.opengis.net/sos/2.0" service="SOS" version="2.0.0">
-						<sos:template>''' + atomicState.sensorURIs.getAt(x.getLabel()) + '''</sos:template>
+						<sos:template>''' + atomicState.URIs.getAt(x.getLabel()) + '''</sos:template>
 						<sos:resultValues>''' + time + ',' + dataString  + '''</sos:resultValues>
 						</sos:InsertResult>''',
                     requestContentType: 'application/xml'
