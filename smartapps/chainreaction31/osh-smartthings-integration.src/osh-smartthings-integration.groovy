@@ -572,6 +572,8 @@ def scheduleHandler(){
 // TODO: could possibly have the capability doing the trigger passed in as a string (may be able to parse event.getData() or getName() for the info)
 // schedule data polling (is executed on event)
 def scheduleHandler(evt){
+    log.debug "Event name: ${evt.name}"
+    log.debug "Event data: ${evt.data}"
     def sensors = atomicState.URIs
     def capMap = atomicState.sensorCaps
 
