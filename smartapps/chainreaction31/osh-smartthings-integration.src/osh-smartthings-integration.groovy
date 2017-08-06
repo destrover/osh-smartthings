@@ -470,7 +470,8 @@ def insertSensor(params) {
 
 // Handle inserting a sensor's result template via SOS-T
 def insertResultTemplate(sensorName) {
-    
+
+    // TODO: change sensor uri map back to previous method if needed
     def URIs = atomicState.URIs
     def sensorURIs = []
     log.trace "[ln:541]sensorCapability (insertResultTemplate): " + sensorName.getCapabilities()
@@ -509,7 +510,7 @@ def insertResultTemplate(sensorName) {
 def scheduleHandler(){
     def sensors = atomicState.URIs
     def capMap = atomicState.sensorCaps
-
+    // TODO: examine responses to insertResultTemplate requests to isolate how to structure the posts in order to provide proper sensor data
     [motiondevices, humiditydevices, leakdevices, thermodevices, tempdevices, contactdevices,
      lockdevices, alarmdevices, switchdevices, presencedevices, smokedevices, buttondevices].each { n ->
         if (n != null){
@@ -567,6 +568,8 @@ def scheduleHandler(){
 	}
 }
 
+// TODO: determine if there's a way to get the capability that triggered the even without resorting to versions for each type of capability
+// TODO: could possibly have the capability doing the trigger passed in as a string (may be able to parse event.getData() or getName() for the info)
 // schedule data polling (is executed on event)
 def scheduleHandler(evt){
     def sensors = atomicState.URIs
