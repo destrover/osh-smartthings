@@ -138,7 +138,7 @@ def initialize() {
     atomicState.sensorCaps = [:]
 
     //doCheck(metaSensor)
-    generateSML(metaSensor)
+    generateSML()
 
     atomicState.URIs = metaSensor
 
