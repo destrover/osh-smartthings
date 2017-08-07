@@ -496,7 +496,7 @@ def insertResultTemplate(sensorName) {
                 URIs.put(capability.getName(), sensorURIs)
             }
         } catch (e) {
-            log.error "Adding Request Template failed: $e"
+            log.error "Inserting Request Template failed: $e"
         }
     }
     log.trace 'MetaSensor data: ' +  URIs
@@ -561,7 +561,7 @@ def scheduleHandler(){
             			log.debug "response data: ${resp2.data}"
         			}
     			} catch (e) {
-        		log.error "Adding Request Template failed: $e"
+        		log.error "Sending Data failed: $e"
     			}
             }
     	} 
@@ -629,7 +629,7 @@ def scheduleHandler(evt){
                     log.debug "response data: ${resp2.data}"
                 }
             } catch (e) {
-                log.error "Adding Request Template failed: $e"
+                log.error "Sending Data failed: $e"
             }
         }
     } 
