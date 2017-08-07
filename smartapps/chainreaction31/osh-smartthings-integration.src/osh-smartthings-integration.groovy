@@ -440,7 +440,7 @@ def generateSML(){
                 ]
                 insertSensor(params)
                 for (currCapability in x.getCapabilities()){
-                	insertResultTemplate(x, currCapability)
+                	insertResultTemplate(x)
                 }
 
             }
