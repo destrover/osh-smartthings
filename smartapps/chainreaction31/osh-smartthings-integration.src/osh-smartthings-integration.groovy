@@ -146,9 +146,9 @@ def initialize() {
     log.trace "Printing sensor map" + atomicState.URIs
 
     // Subscribe to events
-    log.info settings.motiondevices
+    //log.info settings.motiondevices
     subscribe(motiondevices, "motion", scheduleHandler)
-    log.info contactdevices
+    //log.info contactdevices
     subscribe(contactdevices, "contact", scheduleHandler)
     subscribe(switchdevices,"switch", scheduleHandler)
     subscribe(lockdevices,"lock", scheduleHandler)
@@ -198,9 +198,9 @@ def generateInsertSML(String sensorName){
 }
 
 // TODO: Parse sensor description to generate result structure
-def generateDescriptionSML(theSensor, currCapability) {
+def generateDescriptionSML(theSensor) {
     String sensorName = theSensor
-    log.trace "[ln:201]Capability genDescription: " + currCapability
+    //log.trace "[ln:201]Capability genDescription: " + currCapability
     def xmlDescBeginning = '''<?xml version="1.0" encoding="UTF-8"?>
 <sos:InsertResultTemplate service="SOS" version="2.0"
     xmlns:gml="http://www.opengis.net/gml/3.2"
@@ -229,18 +229,9 @@ def generateDescriptionSML(theSensor, currCapability) {
                     <om:result/>
                 </om:OM_Observation>
             </sos:observationTemplate>
-            <sos:resultStructure>
-                <swe:DataRecord>
-                    <swe:field name="time">
-                        <swe:Time
-                            definition="http://www.opengis.net/def/property/OGC/0/SamplingTime" referenceFrame="http://www.opengis.net/def/trs/BIPM/0/UTC">
-                            <swe:label>Sampling Time</swe:label>
-                            <swe:uom xlink:href="http://www.opengis.net/def/uom/ISO-8601/0/Gregorian"/>
-                        </swe:Time>
-                    </swe:field>'''
+            <sos:resultStructure>'''
 
     def xmlDescEnd = '''                
-				</swe:DataRecord>
             </sos:resultStructure>
             <sos:resultEncoding>
                 <swe:TextEncoding blockSeparator="&#xa;"
@@ -252,15 +243,13 @@ def generateDescriptionSML(theSensor, currCapability) {
 
 
     //def xmlDesc = ""
-    def xmlDesc = generateResultTemplate(theSensor, capability) // take a capability instead
+    def xmlDesc = generateResultTemplate(theSensor) // take a capability instead
     if (xmlDesc != null){
     	def requestSML = xmlDescBeginning + xmlDesc + xmlDescEnd
+        log.debug "[ln:249]Generated Result Template: " + requestSML
     	return requestSML
     }
     else {return}
-
-    //log.debug "[ln:256]Generated SML Description: " + requestSML
-    
 }
 
 // Return the SML snippet needed by insertResultTemplate to
@@ -268,16 +257,23 @@ def generateDescriptionSML(theSensor, currCapability) {
 // generate SML desc based on capability
 def generateResultTemplate(sensor){
     // TODO: add name to each output based on capability
-    log.debug "[ln:268]Capabilities: " + sensor.getCapabilities()
-    def description = ""
+    log.debug "[ln:262]Capabilities: " + sensor.getCapabilities()
+    String description = ""
     def capMap = atomicState.sensorCaps
-    def capabilitiesList = capMap.getAt(removeSpaces(sensor.getLabel()))
+    //def capabilitiesList = capMap.getAt(removeSpaces(sensor.getLabel()))
+    ArrayList capabilitiesList = []
+    log.debug "ln: 265 Capability List init: " + capabilitiesList
 
-    log.info "[ln:274]Capability Name: " + capability
-    switch(capability){
+    for(capability in sensor.getCapabilities())
+    {
+        log.info "[ln:269]Capability Name: " + capability
+        switch (capability)
+        {
         // TODO: Above <swe:field name="{sensorName}"> add  <sml:output name="{capabilityName}">
-        case "Contact Sensor":
-        description += '''<swe:field name="contact">
+            case "Contact Sensor":
+                description += '''<swe:DataRecord name="''' + capability + '">'
+                description += addTimeRecord()
+                description += '''<swe:field name="contact">
                 <swe:Category definition="http://sensorml.com/ont/swe/property/ContactSensor">
                 <swe:constraint>
                 <swe:AllowedTokens>
@@ -286,11 +282,14 @@ def generateResultTemplate(sensor){
                 </swe:AllowedTokens>
                 </swe:constraint>
                 </swe:Category>
-                </swe:field>'''
-        capabilitiesList.add("contact")
-        	break
-        case "Motion Sensor":
-        description += '''<swe:field name="motion">
+                </swe:field>
+                </DataRecord>'''
+                capabilitiesList.add("contact")
+                break
+            case "Motion Sensor":
+                description += '''<swe:DataRecord name="''' + capability + '">'
+                description += addTimeRecord()
+                description += '''<swe:field name="motion">
                 <swe:Category definition="http://sensorml.com/ont/swe/property/MotionSensor">
                 <swe:constraint>
                 <swe:AllowedTokens>
@@ -299,11 +298,14 @@ def generateResultTemplate(sensor){
                 </swe:AllowedTokens>
                 </swe:constraint>
                 </swe:Category>
-                </swe:field>'''
-        capabilitiesList.add("motion")
-        	break
-        case "Lock":
-        description += '''<swe:field name="lock">
+                </swe:field>
+                </swe:DataRecord>'''
+                capabilitiesList.add("motion")
+                break
+            case "Lock":
+                description += '''<swe:DataRecord name="''' + capability + '">'
+                description += addTimeRecord()
+                description += '''<swe:field name="lock">
                 <swe:Category definition="http://sensorml.com/ont/swe/property/Lock">
                 <swe:constraint>
                 <swe:AllowedTokens>
@@ -314,11 +316,14 @@ def generateResultTemplate(sensor){
                 </swe:AllowedTokens>
                 </swe:constraint>
                 </swe:Category>
-                </swe:field>'''
-        capabilitiesList.add("lock")
-        	break
-        case "Switch":
-        description += '''<swe:field name="switch">
+                </swe:field>
+                </swe:DataRecord>'''
+                capabilitiesList.add("lock")
+                break
+            case "Switch":
+                description += '''<swe:DataRecord name="''' + capability + '">'
+                description += addTimeRecord()
+                description += '''<swe:field name="switch">
                 <swe:Category definition="http://sensorml.com/ont/swe/property/Switch">
                 <swe:constraint>
                 <swe:AllowedTokens>
@@ -327,20 +332,26 @@ def generateResultTemplate(sensor){
                 </swe:AllowedTokens>
                 </swe:constraint>
                 </swe:Category>
-                </swe:field>'''
-        capabilitiesList.add("switch")
-        	break
-        case "Temperature Measurement":
-        description += '''<swe:field name="temperature">
+                </swe:field>
+                </swe:DataRecord>'''
+                capabilitiesList.add("switch")
+                break
+            case "Temperature Measurement":
+                description += '''<swe:DataRecord name="''' + capability + '">'
+                description += addTimeRecord()
+                description += '''<swe:field name="temperature">
                 <swe:Quantity definition="http://sensorml.com/ont/swe/property/AirTemperature">
                 <swe:label>Air Temperature</swe:label>
                 <swe:uom code="F"/>
                 </swe:Quantity>
-                </swe:field>'''
-        capabilitiesList.add("temperature")
-        	break
-        case "Presence Sensor":
-        description += '''<swe:field name="presence">
+                </swe:field>
+                </swe:DataRecord>'''
+                capabilitiesList.add("temperature")
+                break
+            case "Presence Sensor":
+                description += '''<swe:DataRecord name="''' + capability + '">'
+                description += addTimeRecord()
+                description += '''<swe:field name="presence">
                 <swe:Category definition="http://sensorml.com/ont/swe/property/PresenceSensor">
                 <swe:constraint>
                 <swe:AllowedTokens>
@@ -349,17 +360,20 @@ def generateResultTemplate(sensor){
                 </swe:AllowedTokens>
                 </swe:constraint>
                 </swe:Category>
-                </swe:field>'''
-        capabilitiesList.add("presence")
-        	break
-        default:
-        description = null
-            break        
+                </swe:field>
+                </swe:DataRecord>'''
+                capabilitiesList.add("presence")
+                break
+            default:
+                //description += null
+                break
+        }
+        log.debug "[ln:370] Current Sensor Capabilites: " + capabilitieslist
     }
-    log.debug "[ln:356] Generated Field Tags: " + description
-    log.debug "[ln:357] Current Sensor Capabilites: " + capabilitieslist
+
+    log.debug "[ln:372] Generated Field Tags: " + description
     capMap.put(removeSpaces(sensor.getLabel()), capabilitiesList)
-    log.debug "[ln:359] Capabilties List: " + capMap
+    log.debug "[ln:375] Capabilties List: " + capMap
     atomicState.sensorCaps = capMap
     return description
 }
@@ -373,7 +387,7 @@ def getOSHDate(date){
     year = dateSplit[5]
     time = dateSplit[3]
     def newDate = year + '-' + month + '-' + day + 'T' + time + 'Z'
-    log.info "Formatted Date String: " + newDate
+    log.info " ln:389 Formatted Date String: " + newDate
     return newDate
 }
 
@@ -430,7 +444,7 @@ def generateSML(){
         if (n != null){
 
             for (x in n){
-                log.debug "[ln:504]Logging capability: " + x.getCapabilities()
+                log.debug "[ln:447]Logging capability: " + x.getCapabilities()
                 //def count = 0
                 def params = [
                         //uri: 'http://146.148.39.135:8181/sensorhub/sos',
@@ -439,9 +453,9 @@ def generateSML(){
                         requestContentType: 'application/xml'
                 ]
                 insertSensor(params)
-                for (currCapability in x.getCapabilities()){
+                //for (currCapability in x.getCapabilities()){
                 	insertResultTemplate(x)
-                }
+                //}
 
             }
             //allDevices += n
@@ -475,30 +489,29 @@ def insertResultTemplate(sensorName) {
     def URIs = atomicState.URIs
     def sensorURIs = []
     log.trace "[ln:541]sensorCapability (insertResultTemplate): " + sensorName.getCapabilities()
-    
-    for(capability in sensorName.getCapabilities()){
-        try {
-            def paramsRequest = [
-                    //uri: 'http://146.148.39.135:8181/sensorhub/sos',
-                    uri: endpoint,
-                    body: generateDescriptionSML(sensorName, capability),
-                    requestContentType: 'application/xml'
-            ]
-            httpPost(paramsRequest) { resp2 ->
-                resp2.headers.each {
-                    //log.info "${it.name} : ${it.value}"
-                }
 
-                log.debug "response data: ${resp2.data}"
-
-                String data = resp2.data
-                sensorURIs.add(data)
-                URIs.put(capability.getName(), sensorURIs)
+    try {
+        def paramsRequest = [
+                //uri: 'http://146.148.39.135:8181/sensorhub/sos',
+                uri: endpoint,
+                body: generateDescriptionSML(sensorName),
+                requestContentType: 'application/xml'
+        ]
+        httpPost(paramsRequest) { resp2 ->
+            resp2.headers.each {
+                //log.info "${it.name} : ${it.value}"
             }
-        } catch (e) {
-            log.error "Inserting Request Template failed: $e"
+
+            log.debug "[ln:506] Insert Sensor Result Template Response data: ${resp2.data}"
+
+            String data = resp2.data
+            sensorURIs.add(data)
+            URIs.put(capability.getName(), sensorURIs)
         }
+    } catch (e) {
+        log.error "Inserting Request Template failed: $e"
     }
+
     log.trace 'MetaSensor data: ' +  URIs
     URIs.put(sensorName, sensorURIs)
     atomicState.URIs = URIs
@@ -613,7 +626,7 @@ def scheduleHandler(evt){
                     //uri: 'http://146.148.39.135:8181/sensorhub/sos',
                     uri: endpoint,
                     body: '''<sos:InsertResult xmlns:sos="http://www.opengis.net/sos/2.0" service="SOS" version="2.0.0">
-						<sos:template>''' + atomicState.URIs.getAt(x.getLabel()) + '''</sos:template>
+						<sos:template>''' + atomicState.URIs.getAt(x.getLabel())+ '''</sos:template>
 						<sos:resultValues>''' + time + ',' + dataString  + '''</sos:resultValues>
 						</sos:InsertResult>''',
                     requestContentType: 'application/xml'
@@ -649,4 +662,17 @@ def removeSpaces(label){
     log.debug "Label replacement: " + replacement
     return replacement*/
     return label
+}
+
+def addTimeRecord(){
+    def timeRecord = ''''
+    <swe:field name="time">
+    <swe:Time
+    definition="http://www.opengis.net/def/property/OGC/0/SamplingTime" referenceFrame="http://www.opengis.net/def/trs/BIPM/0/UTC">
+    <swe:label>Sampling Time</swe:label>
+    <swe:uom xlink:href="http://www.opengis.net/def/uom/ISO-8601/0/Gregorian"/>
+    </swe:Time>
+    </swe:field>'''
+
+    return timeRecord
 }
