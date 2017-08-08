@@ -242,7 +242,8 @@ def generateDescriptionSML(theSensor, capability) {
 
     //def xmlDesc = ""
     def xmlDesc = generateResultTag(theSensor, capability) // take a capability instead
-    if (xmlDesc != null){
+    log.trace "[ln:246] xmldesc: " + xmlDesc
+    if (xmlDesc != null || xmlDesc != ""){
     	def requestSML = xmlDescBeginning + xmlDesc + xmlDescEnd
         //log.debug "[ln:249]Generated Result Template: " + requestSML
     	return requestSML
@@ -254,7 +255,7 @@ def generateDescriptionSML(theSensor, capability) {
 // Return the SML snippet needed by insertResultTemplate to
 // allow the sensor to send data to SOS
 // generate SML desc based on capability
-def generateResultTag(sensor, capability){
+String generateResultTag(sensor, capability){
 
     String description = ""
     def sensor2Caps = atomicState.sensorCaps
@@ -495,6 +496,7 @@ def insertResultTemplate(sensorName) {
 
     for(capability in  sensorName.getCapabilities()) {
         def generatedBody = generateDescriptionSML(sensorName, capability)
+        log.debug "[ln:498] generated body: " + generatedBody
         if(generatedBody != null) {
             try {
                 def paramsRequest = [
@@ -572,7 +574,7 @@ def scheduleHandler(){
                 		requestContentType: 'application/xml'
                     ]
 
-        			log.debug "Result Request: " + request.body
+        			log.debug "Insert Observation Request: " + request.body
 
         			httpPost(request) { resp2 ->
             			resp2.headers.each {
