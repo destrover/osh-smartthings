@@ -134,6 +134,7 @@ def updated() {
 def initialize() {
     // map of capability:uri pairs
     atomicState.URIs = [:]
+    // map sensor:capability:uri
     atomicState.sensorCaps = [:]
 
     //doCheck(metaSensor)
@@ -194,8 +195,8 @@ def generateInsertSML(String sensorName){
     return fullXMLBody
 }
 
-// TODO: Parse sensor description to generate result structure
-def generateDescriptionSML(theSensor) {
+
+def generateDescriptionSML(theSensor, capability) {
     String sensorName = theSensor
     //log.trace "[ln:201]Capability genDescription: " + currCapability
     def xmlDescBeginning = '''<?xml version="1.0" encoding="UTF-8"?>
@@ -240,150 +241,146 @@ def generateDescriptionSML(theSensor) {
 
 
     //def xmlDesc = ""
-    def xmlDesc = generateResultTemplate(theSensor) // take a capability instead
+    def xmlDesc = generateResultTag(theSensor, capability) // take a capability instead
     if (xmlDesc != null){
     	def requestSML = xmlDescBeginning + xmlDesc + xmlDescEnd
         //log.debug "[ln:249]Generated Result Template: " + requestSML
     	return requestSML
     }
         // TODO: Test cases where this branch happens
-    else {return}
+    else {return null}
 }
 
 // Return the SML snippet needed by insertResultTemplate to
 // allow the sensor to send data to SOS
 // generate SML desc based on capability
-def generateResultTemplate(sensor){
-    // TODO: add name to each output based on capability
-    log.debug "[ln:262]Capabilities: " + sensor.getCapabilities()
-    String description = ""
-    def capMap = atomicState.sensorCaps
-    //def capabilitiesList = capMap.getAt(removeSpaces(sensor.getLabel()))
-    def capabilitiesList = new ArrayList()
-    log.debug "ln: 265 Capability List init: " + capabilitiesList
+def generateResultTag(sensor, capability){
 
-    for(capability in sensor.getCapabilities())
+    String description = ""
+    def sensor2Caps = atomicState.sensorCaps
+    //def caps = sensor2Caps.getAt(removeSpaces(sensor.getLabel()))
+    def caps = new ArrayList()
+    log.debug "[ln: 262] Capability List init: " + caps
+
+    log.info "[ln:264]Capability Name: " + capability
+    switch (capability)
     {
-        log.info "[ln:269]Capability Name: " + capability
-        switch (capability)
-        {
-        // TODO: Above <swe:field name="{sensorName}"> add  <sml:output name="{capabilityName}">
-            case "Contact Sensor":
-                
-                description += '''<swe:DataRecord><swe:description>''' + capability + "</swe:description>"
-                description += addTimeRecord()
-                description += '''<swe:field name="contact">
-                <swe:Category definition="http://sensorml.com/ont/swe/property/ContactSensor">
-                <swe:constraint>
-                <swe:AllowedTokens>
-                <swe:value>closed</swe:value>
-                <swe:value>open</swe:value>                                    
-                </swe:AllowedTokens>
-                </swe:constraint>
-                </swe:Category>
-                </swe:field>
-                </swe:DataRecord>'''
-                capabilitiesList.add("contact")
-                break
-            case "Motion Sensor":
-                
-                description += '''<swe:DataRecord><swe:description>''' + capability + "</swe:description>"
-                description += addTimeRecord()
-                description += '''<swe:field name="motion">
-                <swe:Category definition="http://sensorml.com/ont/swe/property/MotionSensor">
-                <swe:constraint>
-                <swe:AllowedTokens>
-                <swe:value>active</swe:value>
-                <swe:value>inactive</swe:value>                                    
-                </swe:AllowedTokens>
-                </swe:constraint>
-                </swe:Category>
-                </swe:field>
-                </swe:DataRecord>
-                '''
-                capabilitiesList.add("motion")
-                break
-            case "Lock":
-                
-                description += '''<swe:DataRecord><swe:description>''' + capability + "</swe:description>"
-                description += addTimeRecord()
-                description += '''<swe:field name="lock">
-                <swe:Category definition="http://sensorml.com/ont/swe/property/Lock">
-                <swe:constraint>
-                <swe:AllowedTokens>
-                <swe:value>locked</swe:value>
-                <swe:value>unlocked</swe:value>
-                <swe:value>unknown</swe:value>
-                <swe:value>unlocked with timeout</swe:value>                                    
-                </swe:AllowedTokens>
-                </swe:constraint>
-                </swe:Category>
-                </swe:field>
-                </swe:DataRecord>
-                '''
-                capabilitiesList.add("lock")
-                break
-            case "Switch":
-                
-                description += '''<swe:DataRecord><swe:description>''' + capability + "</swe:description>"
-                description += addTimeRecord()
-                description += '''<swe:field name="switch">
-                <swe:Category definition="http://sensorml.com/ont/swe/property/Switch">
-                <swe:constraint>
-                <swe:AllowedTokens>
-                <swe:value>on</swe:value>
-                <swe:value>off</swe:value>                                    
-                </swe:AllowedTokens>
-                </swe:constraint>
-                </swe:Category>
-                </swe:field>
-                </swe:DataRecord>
-                '''
-                capabilitiesList.add("switch")
-                break
-            case "Temperature Measurement":
-                
-                description += '''<swe:DataRecord><swe:description>''' + capability + "</swe:description>"
-                description += addTimeRecord()
-                description += '''<swe:field name="temperature">
-                <swe:Quantity definition="http://sensorml.com/ont/swe/property/AirTemperature">
-                <swe:label>Air Temperature</swe:label>
-                <swe:uom code="F"/>
-                </swe:Quantity>
-                </swe:field>
-                </swe:DataRecord>
-                '''
-                capabilitiesList.add("temperature")
-                break
-            case "Presence Sensor":
-                
-                description += '''<swe:DataRecord><swe:description>''' + capability + "</swe:description>"
-                description += addTimeRecord()
-                description += '''<swe:field name="presence">
-                <swe:Category definition="http://sensorml.com/ont/swe/property/PresenceSensor">
-                <swe:constraint>
-                <swe:AllowedTokens>
-                <swe:value>not present</swe:value>
-                <swe:value>present</swe:value>                                    
-                </swe:AllowedTokens>
-                </swe:constraint>
-                </swe:Category>
-                </swe:field>
-                </swe:DataRecord>
-                '''
-                capabilitiesList.add("presence")
-                break
-            default:
-                //description += null
-                break
-        }
-        log.debug "[ln:370] Current Sensor Capabilites: " + capabilitieslist
+        case "Contact Sensor":
+            description += '''<swe:DataRecord><swe:description>''' + capability + "</swe:description>"
+            description += addTimeRecord()
+            description += '''<swe:field name="contact">
+            <swe:Category definition="http://sensorml.com/ont/swe/property/ContactSensor">
+            <swe:constraint>
+            <swe:AllowedTokens>
+            <swe:value>closed</swe:value>
+            <swe:value>open</swe:value>                                    
+            </swe:AllowedTokens>
+            </swe:constraint>
+            </swe:Category>
+            </swe:field>
+            </swe:DataRecord>'''
+            caps.add("contact")
+            break
+
+        case "Motion Sensor":
+            description += '''<swe:DataRecord><swe:description>''' + capability + "</swe:description>"
+            description += addTimeRecord()
+            description += '''<swe:field name="motion">
+            <swe:Category definition="http://sensorml.com/ont/swe/property/MotionSensor">
+            <swe:constraint>
+            <swe:AllowedTokens>
+            <swe:value>active</swe:value>
+            <swe:value>inactive</swe:value>                                    
+            </swe:AllowedTokens>
+            </swe:constraint>
+            </swe:Category>
+            </swe:field>
+            </swe:DataRecord>
+            '''
+            caps.add("motion")
+            break
+
+        case "Lock":
+            description += '''<swe:DataRecord><swe:description>''' + capability + "</swe:description>"
+            description += addTimeRecord()
+            description += '''<swe:field name="lock">
+            <swe:Category definition="http://sensorml.com/ont/swe/property/Lock">
+            <swe:constraint>
+            <swe:AllowedTokens>
+            <swe:value>locked</swe:value>
+            <swe:value>unlocked</swe:value>
+            <swe:value>unknown</swe:value>
+            <swe:value>unlocked with timeout</swe:value>                                    
+            </swe:AllowedTokens>
+            </swe:constraint>
+            </swe:Category>
+            </swe:field>
+            </swe:DataRecord>
+            '''
+            caps.add("lock")
+            break
+
+        case "Switch":
+            description += '''<swe:DataRecord><swe:description>''' + capability + "</swe:description>"
+            description += addTimeRecord()
+            description += '''<swe:field name="switch">
+            <swe:Category definition="http://sensorml.com/ont/swe/property/Switch">
+            <swe:constraint>
+            <swe:AllowedTokens>
+            <swe:value>on</swe:value>
+            <swe:value>off</swe:value>                                    
+            </swe:AllowedTokens>
+            </swe:constraint>
+            </swe:Category>
+            </swe:field>
+            </swe:DataRecord>
+            '''
+            caps.add("switch")
+            break
+
+        case "Temperature Measurement":
+            description += '''<swe:DataRecord><swe:description>''' + capability + "</swe:description>"
+            description += addTimeRecord()
+            description += '''<swe:field name="temperature">
+            <swe:Quantity definition="http://sensorml.com/ont/swe/property/AirTemperature">
+            <swe:label>Air Temperature</swe:label>
+            <swe:uom code="F"/>
+            </swe:Quantity>
+            </swe:field>
+            </swe:DataRecord>
+            '''
+            caps.add("temperature")
+            break
+
+        case "Presence Sensor":
+            description += '''<swe:DataRecord><swe:description>''' + capability + "</swe:description>"
+            description += addTimeRecord()
+            description += '''<swe:field name="presence">
+            <swe:Category definition="http://sensorml.com/ont/swe/property/PresenceSensor">
+            <swe:constraint>
+            <swe:AllowedTokens>
+            <swe:value>not present</swe:value>
+            <swe:value>present</swe:value>                                    
+            </swe:AllowedTokens>
+            </swe:constraint>
+            </swe:Category>
+            </swe:field>
+            </swe:DataRecord>
+            '''
+            caps.add("presence")
+            break
+
+        default:
+            //description += null
+            break
+
+        //log.debug "[ln:370] Current Sensor Capabilites: " + capabilitieslist
     }
 
-    log.debug "[ln:372] Generated Field Tags: " + description
-    capMap.put(removeSpaces(sensor.getLabel()), capabilitiesList)
-    log.debug "[ln:375] Capabilties List: " + capMap
-    atomicState.sensorCaps = capMap
+    /*log.debug "[ln:372] Generated Field Tags: " + description
+    sensor2Caps.put(removeSpaces(sensor.getLabel()), caps)
+    log.debug "[ln:375] Capabilties List: " + sensor2Caps
+    atomicState.sensorCaps = sensor2Caps*/
     return description
 }
 
@@ -462,10 +459,7 @@ def generateSML(){
                         requestContentType: 'application/xml'
                 ]
                 insertSensor(params)
-                //for (currCapability in x.getCapabilities()){
-                	insertResultTemplate(x)
-                //}
-
+                insertResultTemplate(x)
             }
             //allDevices += n
         }
@@ -494,36 +488,40 @@ def insertSensor(params) {
 // Handle inserting a sensor's result template via SOS-T
 def insertResultTemplate(sensorName) {
 
-    // TODO: change sensor uri map back to previous method if needed
     def URIs = atomicState.URIs
-    def sensorURIs
+    //
+    def sensorURIs = [:]
     log.trace "[ln:541]sensorCapability (insertResultTemplate): " + sensorName.getCapabilities()
 
-    try {
-        def paramsRequest = [
-                //uri: 'http://146.148.39.135:8181/sensorhub/sos',
-                uri: endpoint,
-                body: generateDescriptionSML(sensorName),
-                requestContentType: 'application/xml'
-        ]
-        httpPost(paramsRequest) { resp2 ->
-            resp2.headers.each {
-                //log.info "${it.name} : ${it.value}"
+    for(capability in  sensorName.getCapabilities()) {
+        def generatedBody = generateDescriptionSML(sensorName, capability)
+        if(generatedBody != null) {
+            try {
+                def paramsRequest = [
+                        //uri: 'http://146.148.39.135:8181/sensorhub/sos',
+                        uri               : endpoint,
+                        body              : generatedBody,
+                        requestContentType: 'application/xml'
+                ]
+                httpPost(paramsRequest) { resp2 ->
+                    resp2.headers.each {
+                        //log.info "${it.name} : ${it.value}"
+                    }
+
+                    //log.debug "[ln:506] Insert Sensor Result Template Response data: ${resp2.data}"
+
+                    String data = resp2.data
+                    log.debug "[ln 512] URI: " + data
+                    sensorURIs.put(capability.getName(), data)
+                }
+            } catch (e) {
+                log.error "Inserting Request Template failed: $e"
             }
-
-            //log.debug "[ln:506] Insert Sensor Result Template Response data: ${resp2.data}"
-
-            String data = resp2.data
-            log.debug "[ln 509] URI: " + data
-            sensorURIs = data
-            //URIs.put(sensorName.getLabel(), data)
         }
-    } catch (e) {
-        log.error "Inserting Request Template failed: $e"
     }
 
-    log.trace 'MetaSensor data: ' +  URIs
-    URIs.put(sensorName, sensorURIs)
+    log.trace 'Sensor to cap to uri map data: ' +  URIs
+    URIs.put(removeSpaces(sensorName.getLabel()), sensorURIs)
     atomicState.URIs = URIs
     log.debug "Current URI map: " + atomicState.URIs
 }
@@ -591,7 +589,7 @@ def scheduleHandler(){
 	}
 }
 
-// TODO: determine if there's a way to get the capability that triggered the even without resorting to versions for each type of capability
+// TODO: determine if there's a way to get the capability that triggered the even without resorting to versions for each type of capability (THERE IS)
 // TODO: could possibly have the capability doing the trigger passed in as a string (may be able to parse event.getData() or getName() for the info)
 // schedule data polling (is executed on event)
 def scheduleHandler(evt){
