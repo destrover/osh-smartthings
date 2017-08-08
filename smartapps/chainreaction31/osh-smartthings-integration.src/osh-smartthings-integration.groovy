@@ -261,7 +261,7 @@ def generateResultTemplate(sensor){
     String description = ""
     def capMap = atomicState.sensorCaps
     //def capabilitiesList = capMap.getAt(removeSpaces(sensor.getLabel()))
-    ArrayList capabilitiesList = []
+    def capabilitiesList = new ArrayList()
     log.debug "ln: 265 Capability List init: " + capabilitiesList
 
     for(capability in sensor.getCapabilities())
