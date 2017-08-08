@@ -271,7 +271,7 @@ def generateResultTemplate(sensor){
         {
         // TODO: Above <swe:field name="{sensorName}"> add  <sml:output name="{capabilityName}">
             case "Contact Sensor":
-                description += '''<swe:DataRecord name="''' + capability + '">'
+                description += '''<swe:DataRecord><swe:description>''' + capability + "</swe:description>"
                 description += addTimeRecord()
                 description += '''<swe:field name="contact">
                 <swe:Category definition="http://sensorml.com/ont/swe/property/ContactSensor">
@@ -283,11 +283,11 @@ def generateResultTemplate(sensor){
                 </swe:constraint>
                 </swe:Category>
                 </swe:field>
-                </DataRecord>'''
+                </swe:DataRecord>'''
                 capabilitiesList.add("contact")
                 break
             case "Motion Sensor":
-                description += '''<swe:DataRecord name="''' + capability + '">'
+                description += '''<swe:DataRecord><swe:description>''' + capability + "</swe:description>"
                 description += addTimeRecord()
                 description += '''<swe:field name="motion">
                 <swe:Category definition="http://sensorml.com/ont/swe/property/MotionSensor">
@@ -303,7 +303,7 @@ def generateResultTemplate(sensor){
                 capabilitiesList.add("motion")
                 break
             case "Lock":
-                description += '''<swe:DataRecord name="''' + capability + '">'
+                description += '''<swe:DataRecord><swe:description>''' + capability + "</swe:description>"
                 description += addTimeRecord()
                 description += '''<swe:field name="lock">
                 <swe:Category definition="http://sensorml.com/ont/swe/property/Lock">
@@ -321,7 +321,7 @@ def generateResultTemplate(sensor){
                 capabilitiesList.add("lock")
                 break
             case "Switch":
-                description += '''<swe:DataRecord name="''' + capability + '">'
+                description += '''<swe:DataRecord><swe:description>''' + capability + "</swe:description>"
                 description += addTimeRecord()
                 description += '''<swe:field name="switch">
                 <swe:Category definition="http://sensorml.com/ont/swe/property/Switch">
@@ -337,7 +337,7 @@ def generateResultTemplate(sensor){
                 capabilitiesList.add("switch")
                 break
             case "Temperature Measurement":
-                description += '''<swe:DataRecord name="''' + capability + '">'
+                description += '''<swe:DataRecord><swe:description>''' + capability + "</swe:description>"
                 description += addTimeRecord()
                 description += '''<swe:field name="temperature">
                 <swe:Quantity definition="http://sensorml.com/ont/swe/property/AirTemperature">
@@ -349,7 +349,7 @@ def generateResultTemplate(sensor){
                 capabilitiesList.add("temperature")
                 break
             case "Presence Sensor":
-                description += '''<swe:DataRecord name="''' + capability + '">'
+                description += '''<swe:DataRecord><swe:description>''' + capability + "</swe:description>"
                 description += addTimeRecord()
                 description += '''<swe:field name="presence">
                 <swe:Category definition="http://sensorml.com/ont/swe/property/PresenceSensor">
@@ -665,7 +665,7 @@ def removeSpaces(label){
 }
 
 def addTimeRecord(){
-    def timeRecord = ''''
+    def timeRecord = '''
     <swe:field name="time">
     <swe:Time
     definition="http://www.opengis.net/def/property/OGC/0/SamplingTime" referenceFrame="http://www.opengis.net/def/trs/BIPM/0/UTC">
