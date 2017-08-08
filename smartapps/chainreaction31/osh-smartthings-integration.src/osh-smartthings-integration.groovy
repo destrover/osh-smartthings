@@ -485,7 +485,6 @@ def insertSensor(params) {
 }
 
 
-
 // Handle inserting a sensor's result template via SOS-T
 def insertResultTemplate(sensorName) {
 
@@ -532,134 +531,6 @@ def insertResultTemplate(sensorName) {
     log.debug "Current URI map: " + atomicState.URIs
 }
 
-
-// schedule data polling (is executed once per minute)
-/*def scheduleHandler(){
-    def capMap = atomicState.URIs
-    //def capMap = atomicState.capConversion
-    [motiondevices, humiditydevices, leakdevices, thermodevices, tempdevices, contactdevices,
-     lockdevices, alarmdevices, switchdevices, presencedevices, smokedevices, buttondevices].each { n ->
-        if (n != null){
-
-            for (x in n){
-            
-                // create cs string to feed 
-                def dataString = ""
-                def count = 0
-                for ( capability in capMap.getAt(removeSpaces(x.getLabel()))){
-                    count++
-                    log.debug "Size of caps: " + capMap.getAt(removeSpaces(x.getLabel())).size()
-                    def size = capMap.getAt(x.getLabel()).size()
-                    log.trace "[ln:604] Capability: " + capability
-                    log.debug "Current Value of capability: " + x.currentValue(capability).toString()
-                    dataString += x.currentValue(capability)
-                    if (count < size){
-                        dataString += ","
-                    }
-                }
-                
-                //get current time
-                log.debug "Current time: " + now()
-                def currDate = new Date(now())
-                log.debug "Current date: " + currDate
-                String stringDate = currDate
-                def time = getOSHDate(stringDate)
-                log.debug time
-
-                try {
-        			def request = [
-                        //uri: 'http://146.148.39.135:8181/sensorhub/sos',
-                        uri: endpoint,
-                		body: '''<sos:InsertResult xmlns:sos="http://www.opengis.net/sos/2.0" service="SOS" version="2.0.0">
-    						<sos:template>''' + atomicState.URIs.getAt(x.getLabel()) + '''</sos:template>
-   							<sos:resultValues>''' + time + ',' + dataString  + '''</sos:resultValues>
-    						</sos:InsertResult>''',
-                		requestContentType: 'application/xml'
-                    ]
-
-        			log.debug "Insert Observation Request: " + request.body
-
-        			httpPost(request) { resp2 ->
-            			resp2.headers.each {
-                		//log.info "${it.name} : ${it.value}"
-           				}
-            			//log.debug "response contentType: ${resp2.contentType}"
-            			log.debug "response data: ${resp2.data}"
-        			}
-    			} catch (e) {
-        		log.error "Sending Data failed: $e"
-    			}
-            }
-    	} 
-	}
-}*/
-
-// TODO: determine if there's a way to get the capability that triggered the even without resorting to versions for each type of capability (THERE IS)
-// TODO: could possibly have the capability doing the trigger passed in as a string (may be able to parse event.getData() or getName() for the info)
-// schedule data polling (is executed on event)
-def scheduleHandler(evt){
-    log.debug "Event name: ${evt.name}"
-    log.debug "Event data: ${evt.data}"
-    def sensors = atomicState.URIs
-    def capMap = atomicState.capConversion
-
-    [motiondevices, humiditydevices, leakdevices, thermodevices, tempdevices, contactdevices,
-     lockdevices, alarmdevices, switchdevices, presencedevices, smokedevices, buttondevices].each { n ->
-        if (n != null){
-
-            /*for (x in n){
-            
-                // create cs string to feed 
-                def dataString = ""
-                def count = 0
-                for ( capability in capMap.getAt(x.getLabel())){
-                    count++
-                    //log.debug "Size of caps: " + capMap.getAt(x.getLabel()).size()
-                    def size = capMap.getAt(x.getLabel()).size()
-                    log.trace "[ln:604] Capability: " + capability
-                    log.debug "Current Value of capability: " + x.currentValue(capability).toString()
-                    dataString += x.currentValue(capability)
-                    if (count < size){
-                        dataString += ","
-                    }
-                }*/
-                
-            def dataString = evt.value
-
-            //get current time
-            log.debug "Current time: " + now()
-            def currDate = new Date(now())
-            log.debug "Current date: " + currDate
-            String stringDate = currDate
-            def time = getOSHDate(stringDate)
-            log.debug time
-
-            try {
-                def request = [
-                    //uri: 'http://146.148.39.135:8181/sensorhub/sos',
-                    uri: endpoint,
-                    body: '''<sos:InsertResult xmlns:sos="http://www.opengis.net/sos/2.0" service="SOS" version="2.0.0">
-						<sos:template>''' + atomicState.URIs.getAt(x.getLabel())+ '''</sos:template>
-						<sos:resultValues>''' + time + ',' + dataString  + '''</sos:resultValues>
-						</sos:InsertResult>''',
-                    requestContentType: 'application/xml'
-                ]
-
-                log.debug "Result Request: " + request.body
-
-                httpPost(request) { resp2 ->
-                    resp2.headers.each {
-                        //log.info "${it.name} : ${it.value}"
-                    }
-                    //log.debug "response contentType: ${resp2.contentType}"
-                    log.debug "response data: ${resp2.data}"
-                }
-            } catch (e) {
-                log.error "Sending Data failed: $e"
-            }
-        }
-    } 
-}
 
 // remove spaces in sensor labels
 def removeSpaces(label){
@@ -740,5 +611,55 @@ def scheduleHandler(){
                 }
             }
         }
+    }
+}
+
+
+// TODO: determine if there's a way to get the capability that triggered the even without resorting to versions for each type of capability (THERE IS)
+// TODO: could possibly have the capability doing the trigger passed in as a string (may be able to parse event.getData() or getName() for the info)
+// schedule data polling (is executed on event)
+def scheduleHandler(evt){
+    log.debug "Event name: ${evt.name}"
+    log.debug "Event value: ${evt.value}"
+    log.debug "Event device: ${evt.device}"
+
+    def device = removeSpaces(evt.device.getLabel())
+    def eventName = evt.name
+    def dataString = evt.value
+    log.debug "Device map" + atomicState.URIs.getAt(device)
+    def deviceMap = atomicState.URIs.getAt(device)
+    def uri = deviceMap.getAt(eventName)
+    log.debug "URI retrieved: " + uri
+
+    //get current time
+    log.debug "Current time: " + now()
+    def currDate = new Date(now())
+    log.debug "Current date: " + currDate
+    String stringDate = currDate
+    def time = getOSHDate(stringDate)
+    log.debug time
+
+    try {
+        def request = [
+                //uri: 'http://146.148.39.135:8181/sensorhub/sos',
+                uri: endpoint,
+                body: '''<sos:InsertResult xmlns:sos="http://www.opengis.net/sos/2.0" service="SOS" version="2.0.0">
+                <sos:template>''' + uri+ '''</sos:template>
+                <sos:resultValues>''' + time + ',' + dataString  + '''</sos:resultValues>
+                </sos:InsertResult>''',
+                requestContentType: 'application/xml'
+        ]
+
+        log.debug "Result Request: " + request.body
+
+        httpPost(request) { resp2 ->
+            resp2.headers.each {
+                //log.info "${it.name} : ${it.value}"
+            }
+            //log.debug "response contentType: ${resp2.contentType}"
+            log.debug "response data: ${resp2.data}"
+        }
+    } catch (e) {
+        log.error "Sending Data failed: $e"
     }
 }
