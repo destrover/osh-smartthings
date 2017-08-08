@@ -135,7 +135,7 @@ def initialize() {
     // map of capability:uri pairs
     atomicState.URIs = [:]
     // map sensor:capability:uri
-    atomicState.sensorCaps = [:]
+    atomicState.capConversion = [:]
 
     //doCheck(metaSensor)
     generateSML()
@@ -258,7 +258,7 @@ def generateDescriptionSML(theSensor, capability) {
 String generateResultTag(sensor, capability){
 
     String description = ""
-    def sensor2Caps = atomicState.sensorCaps
+    def capConversion = atomicState.capConversion
     //def caps = sensor2Caps.getAt(removeSpaces(sensor.getLabel()))
     def caps = new ArrayList()
     log.debug "[ln: 262] Capability List init: " + caps
@@ -280,7 +280,7 @@ String generateResultTag(sensor, capability){
             </swe:Category>
             </swe:field>
             </swe:DataRecord>'''
-            caps.add("contact")
+            capConversion.put(capability, "contact")
             break
 
         case "Motion Sensor":
@@ -298,7 +298,7 @@ String generateResultTag(sensor, capability){
             </swe:field>
             </swe:DataRecord>
             '''
-            caps.add("motion")
+            capConversion.put(capability, "motion")
             break
 
         case "Lock":
@@ -318,7 +318,7 @@ String generateResultTag(sensor, capability){
             </swe:field>
             </swe:DataRecord>
             '''
-            caps.add("lock")
+            capConversion.put(capability, "lock")
             break
 
         case "Switch":
@@ -336,7 +336,7 @@ String generateResultTag(sensor, capability){
             </swe:field>
             </swe:DataRecord>
             '''
-            caps.add("switch")
+            capConversion.put(capability, "switch")
             break
 
         case "Temperature Measurement":
@@ -350,7 +350,7 @@ String generateResultTag(sensor, capability){
             </swe:field>
             </swe:DataRecord>
             '''
-            caps.add("temperature")
+            capConversion.put(capability, "temperature")
             break
 
         case "Presence Sensor":
@@ -368,7 +368,7 @@ String generateResultTag(sensor, capability){
             </swe:field>
             </swe:DataRecord>
             '''
-            caps.add("presence")
+            capConversion.put(capability, "presence")
             break
 
         default:
@@ -380,8 +380,8 @@ String generateResultTag(sensor, capability){
 
     /*log.debug "[ln:372] Generated Field Tags: " + description
     sensor2Caps.put(removeSpaces(sensor.getLabel()), caps)
-    log.debug "[ln:375] Capabilties List: " + sensor2Caps
-    atomicState.sensorCaps = sensor2Caps*/
+    log.debug "[ln:375] Capabilties List: " + sensor2Caps*/
+    atomicState.capConversion = capConversion
     return description
 }
 
@@ -536,7 +536,7 @@ def insertResultTemplate(sensorName) {
 // schedule data polling (is executed once per minute)
 /*def scheduleHandler(){
     def capMap = atomicState.URIs
-    //def capMap = atomicState.sensorCaps
+    //def capMap = atomicState.capConversion
     [motiondevices, humiditydevices, leakdevices, thermodevices, tempdevices, contactdevices,
      lockdevices, alarmdevices, switchdevices, presencedevices, smokedevices, buttondevices].each { n ->
         if (n != null){
@@ -601,7 +601,7 @@ def scheduleHandler(evt){
     log.debug "Event name: ${evt.name}"
     log.debug "Event data: ${evt.data}"
     def sensors = atomicState.URIs
-    def capMap = atomicState.sensorCaps
+    def capMap = atomicState.capConversion
 
     [motiondevices, humiditydevices, leakdevices, thermodevices, tempdevices, contactdevices,
      lockdevices, alarmdevices, switchdevices, presencedevices, smokedevices, buttondevices].each { n ->
@@ -692,8 +692,8 @@ def addTimeRecord(){
 
 // schedule data polling (is executed once per minute)
 def scheduleHandler(){
-    def capMap = atomicState.URIs
-    //def capMap = atomicState.sensorCaps
+    def sensorMap = atomicState.URIs
+    def capabilityConversion = atomicState.capConversion
     // TODO: examine responses to insertResultTemplate requests to isolate how to structure the posts in order to provide proper sensor data
     [motiondevices, humiditydevices, leakdevices, thermodevices, tempdevices, contactdevices,
      lockdevices, alarmdevices, switchdevices, presencedevices, smokedevices, buttondevices].each { n ->
@@ -701,8 +701,9 @@ def scheduleHandler(){
 
             for (sensor in n){
 
-                for (capability in capMap.getAt(removeSpaces(sensor.getLabel()))) {
-                    log.debug "****Current Capability: " + capability + "****"
+                for (capability in sensorMap.getAt(removeSpaces(sensor.getLabel()))) {
+                    log.debug "****Current Capability: " + capability.getKey() + "****"
+                    log.debug "****Current uri: " + capability.getValue() + "****"
 
                     //get current time
                     log.debug "Current time: " + now()
@@ -711,14 +712,14 @@ def scheduleHandler(){
                     String stringDate = currDate
                     def time = getOSHDate(stringDate)
                     log.debug time
-                    String dataString = sensor.currentValue(capability)
+                    String dataString = sensor.currentValue(capabilityConversion.getAt(capability.getKey()))
 
                     try {
                         def request = [
                                 //uri: 'http://146.148.39.135:8181/sensorhub/sos',
                                 uri               : endpoint,
                                 body              : '''<sos:InsertResult xmlns:sos="http://www.opengis.net/sos/2.0" service="SOS" version="2.0.0">
-    						        <sos:template>''' + capMap.getAt(removeSpaces(sensor.getLabel())) + '''</sos:template>
+    						        <sos:template>''' + capability.getValue() + '''</sos:template>
    							        <sos:resultValues>''' + time + ',' + dataString + '''</sos:resultValues>
     						        </sos:InsertResult>''',
                                 requestContentType: 'application/xml'
