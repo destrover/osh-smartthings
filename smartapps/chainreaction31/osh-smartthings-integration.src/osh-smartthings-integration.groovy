@@ -134,13 +134,10 @@ def updated() {
 def initialize() {
     // map of capability:uri pairs
     atomicState.URIs = [:]
-    def metaSensor = atomicState.URIs
     atomicState.sensorCaps = [:]
 
     //doCheck(metaSensor)
     generateSML()
-
-    atomicState.URIs = metaSensor
 
     // Check SensorMap
     log.trace "Printing sensor map" + atomicState.URIs
@@ -246,9 +243,10 @@ def generateDescriptionSML(theSensor) {
     def xmlDesc = generateResultTemplate(theSensor) // take a capability instead
     if (xmlDesc != null){
     	def requestSML = xmlDescBeginning + xmlDesc + xmlDescEnd
-        log.debug "[ln:249]Generated Result Template: " + requestSML
+        //log.debug "[ln:249]Generated Result Template: " + requestSML
     	return requestSML
     }
+        // TODO: Test cases where this branch happens
     else {return}
 }
 
@@ -271,6 +269,7 @@ def generateResultTemplate(sensor){
         {
         // TODO: Above <swe:field name="{sensorName}"> add  <sml:output name="{capabilityName}">
             case "Contact Sensor":
+                
                 description += '''<swe:DataRecord><swe:description>''' + capability + "</swe:description>"
                 description += addTimeRecord()
                 description += '''<swe:field name="contact">
@@ -287,6 +286,7 @@ def generateResultTemplate(sensor){
                 capabilitiesList.add("contact")
                 break
             case "Motion Sensor":
+                
                 description += '''<swe:DataRecord><swe:description>''' + capability + "</swe:description>"
                 description += addTimeRecord()
                 description += '''<swe:field name="motion">
@@ -299,10 +299,12 @@ def generateResultTemplate(sensor){
                 </swe:constraint>
                 </swe:Category>
                 </swe:field>
-                </swe:DataRecord>'''
+                </swe:DataRecord>
+                '''
                 capabilitiesList.add("motion")
                 break
             case "Lock":
+                
                 description += '''<swe:DataRecord><swe:description>''' + capability + "</swe:description>"
                 description += addTimeRecord()
                 description += '''<swe:field name="lock">
@@ -317,10 +319,12 @@ def generateResultTemplate(sensor){
                 </swe:constraint>
                 </swe:Category>
                 </swe:field>
-                </swe:DataRecord>'''
+                </swe:DataRecord>
+                '''
                 capabilitiesList.add("lock")
                 break
             case "Switch":
+                
                 description += '''<swe:DataRecord><swe:description>''' + capability + "</swe:description>"
                 description += addTimeRecord()
                 description += '''<swe:field name="switch">
@@ -333,10 +337,12 @@ def generateResultTemplate(sensor){
                 </swe:constraint>
                 </swe:Category>
                 </swe:field>
-                </swe:DataRecord>'''
+                </swe:DataRecord>
+                '''
                 capabilitiesList.add("switch")
                 break
             case "Temperature Measurement":
+                
                 description += '''<swe:DataRecord><swe:description>''' + capability + "</swe:description>"
                 description += addTimeRecord()
                 description += '''<swe:field name="temperature">
@@ -345,10 +351,12 @@ def generateResultTemplate(sensor){
                 <swe:uom code="F"/>
                 </swe:Quantity>
                 </swe:field>
-                </swe:DataRecord>'''
+                </swe:DataRecord>
+                '''
                 capabilitiesList.add("temperature")
                 break
             case "Presence Sensor":
+                
                 description += '''<swe:DataRecord><swe:description>''' + capability + "</swe:description>"
                 description += addTimeRecord()
                 description += '''<swe:field name="presence">
@@ -361,7 +369,8 @@ def generateResultTemplate(sensor){
                 </swe:constraint>
                 </swe:Category>
                 </swe:field>
-                </swe:DataRecord>'''
+                </swe:DataRecord>
+                '''
                 capabilitiesList.add("presence")
                 break
             default:
@@ -444,7 +453,7 @@ def generateSML(){
         if (n != null){
 
             for (x in n){
-                log.debug "[ln:447]Logging capability: " + x.getCapabilities()
+                //log.debug "[ln:447]Logging capability: " + x.getCapabilities()
                 //def count = 0
                 def params = [
                         //uri: 'http://146.148.39.135:8181/sensorhub/sos',
@@ -487,7 +496,7 @@ def insertResultTemplate(sensorName) {
 
     // TODO: change sensor uri map back to previous method if needed
     def URIs = atomicState.URIs
-    def sensorURIs = []
+    def sensorURIs
     log.trace "[ln:541]sensorCapability (insertResultTemplate): " + sensorName.getCapabilities()
 
     try {
@@ -502,11 +511,12 @@ def insertResultTemplate(sensorName) {
                 //log.info "${it.name} : ${it.value}"
             }
 
-            log.debug "[ln:506] Insert Sensor Result Template Response data: ${resp2.data}"
+            //log.debug "[ln:506] Insert Sensor Result Template Response data: ${resp2.data}"
 
             String data = resp2.data
-            sensorURIs.add(data)
-            URIs.put(capability.getName(), sensorURIs)
+            log.debug "[ln 509] URI: " + data
+            sensorURIs = data
+            //URIs.put(sensorName.getLabel(), data)
         }
     } catch (e) {
         log.error "Inserting Request Template failed: $e"
