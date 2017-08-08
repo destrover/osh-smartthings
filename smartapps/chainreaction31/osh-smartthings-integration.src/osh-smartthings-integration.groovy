@@ -496,7 +496,7 @@ def insertResultTemplate(sensorName) {
 
     for(capability in  sensorName.getCapabilities()) {
         def generatedBody = generateDescriptionSML(sensorName, capability)
-        log.debug "[ln:498] generated body: " + generatedBody
+        //log.debug "[ln:498] generated body: " + generatedBody
         if(generatedBody != null) {
             try {
                 def paramsRequest = [
@@ -513,8 +513,11 @@ def insertResultTemplate(sensorName) {
                     //log.debug "[ln:506] Insert Sensor Result Template Response data: ${resp2.data}"
 
                     String data = resp2.data
-                    log.debug "[ln 512] URI: " + data
-                    sensorURIs.put(capability.getName(), data)
+
+                    if(data != "Unable to read SWE Common data") {
+                        log.debug "[ln 512] URI: " + data
+                        sensorURIs.put(capability.getName(), data)
+                    }
                 }
             } catch (e) {
                 log.error "Inserting Request Template failed: $e"
@@ -523,6 +526,7 @@ def insertResultTemplate(sensorName) {
     }
 
     log.trace 'Sensor to cap to uri map data: ' +  URIs
+    log.info "529 - sensor label: " + sensorName.getLabel()
     URIs.put(removeSpaces(sensorName.getLabel()), sensorURIs)
     atomicState.URIs = URIs
     log.debug "Current URI map: " + atomicState.URIs
