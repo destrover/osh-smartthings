@@ -165,7 +165,7 @@ def initialize() {
 }
 
 
-def generateInsertSML(String sensorName){
+def generateInsertSML(sensor){
     def beginningXML = '''<?xml version="1.0" encoding="UTF-8"?>
 <swes:InsertSensor service="SOS" version="2.0"
     xmlns:gml="http://www.opengis.net/gml/3.2"
@@ -179,7 +179,7 @@ def generateInsertSML(String sensorName){
             <gml:identifier codeSpace="uid">urn:osh:client:'''
 
     def endingXML = '''</gml:identifier>
-            <gml:name>''' + sensorName + '''</gml:name>
+            <gml:name>''' + sensor.getLabel() + '''</gml:name>
         </sml:PhysicalSystem>
     </swes:procedureDescription>
     <swes:metadata>
@@ -190,7 +190,7 @@ def generateInsertSML(String sensorName){
     </swes:metadata>
 </swes:InsertSensor>'''
 
-    def fullXMLBody = beginningXML + sensorName + endingXML
+    def fullXMLBody = beginningXML + removeSpaces(sensor.getLabel()) + endingXML
     //log.info fullXMLBody
     return fullXMLBody
 }
@@ -500,7 +500,7 @@ def generateSML(){
                 def params = [
                         //uri: 'http://146.148.39.135:8181/sensorhub/sos',
                         uri: endpoint,
-                        body: generateInsertSML(removeSpaces(x.getLabel())),
+                        body: generateInsertSML(x),
                         requestContentType: 'application/xml'
                 ]
                 insertSensor(params)
@@ -579,7 +579,7 @@ def insertResultTemplate(sensorName) {
 // remove spaces in sensor labels
 def removeSpaces(label){
     def label2 = label
-    label2 = label2.replaceAll("\\s", "")
+    label2 = label2.replaceAll("\\s", "_")
     log.debug "-----New Label: " + label2 + "-----"
     return label2
 }
