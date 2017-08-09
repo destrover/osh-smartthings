@@ -164,7 +164,7 @@ def initialize() {
 
 }
 
-// TODO: add parameters for server uri
+
 def generateInsertSML(String sensorName){
     def beginningXML = '''<?xml version="1.0" encoding="UTF-8"?>
 <swes:InsertSensor service="SOS" version="2.0"
@@ -371,6 +371,19 @@ String generateResultTag(sensor, capability){
             capConversion.put(capability, "presence")
             break
 
+        case "Battery":
+            description += '''<swe:DataRecord><swe:description>''' + capability + "</swe:description>"
+            description += addTimeRecord()
+            description += '''<swe:field name="battery">
+            <swe:Quantity definition="http://sensorml.com/ont/swe/property/BatteryLevel">
+            <swe:label>Battery Level</swe:label>
+            </swe:Quantity>
+            </swe:field>
+            </swe:DataRecord>
+            '''
+            capConversion.put(capability, "battery")
+            break
+
         default:
             //description += null
             break
@@ -565,7 +578,6 @@ def addTimeRecord(){
 def scheduleHandler(){
     def sensorMap = atomicState.URIs
     def capabilityConversion = atomicState.capConversion
-    // TODO: examine responses to insertResultTemplate requests to isolate how to structure the posts in order to provide proper sensor data
     [motiondevices, humiditydevices, leakdevices, thermodevices, tempdevices, contactdevices,
      lockdevices, alarmdevices, switchdevices, presencedevices, smokedevices, buttondevices].each { n ->
         if (n != null){
