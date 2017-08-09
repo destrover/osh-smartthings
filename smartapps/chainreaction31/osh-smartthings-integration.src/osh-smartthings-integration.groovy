@@ -40,19 +40,19 @@ preferences {
 def pageConfigure() {
 
     def inputMotionDevices = [name: "motiondevices", type: "capability.motionSensor", title: "Which motion sensors?", multiple: true, required: false]
-    def inputHumidityDevices = [name: "humiditydevices", type: "capability.relativeHumidityMeasurement", title: "Which humidity sensors?", multiple: true, required: false]
-    def inputLeakDevices = [name: "leakdevices", type: "capability.waterSensor", title: "Which leak sensors?", multiple: true, required: false]
-    def inputThermoDevices = [name: "thermodevices", type: "capability.thermostat", title: "Which thermostats?", multiple: true, required: false]
-    def inputTemperature = [name: "tempdevices", type: "capability.temperatureMeasurement", title: "Which temperature sensors?", multiple: true, required: false]
     def inputContactDevices = [name: "contactdevices", type: "capability.contactSensor", title: "Which open/close contact sensors?", multiple: true, required: false]
+    def inputTemperature = [name: "tempdevices", type: "capability.temperatureMeasurement", title: "Which temperature sensors?", multiple: true, required: false]
+    def inputPresenceDevices = [name: "presencedevices", type: "capability.presenceSensor", title: "Which presence sensors?", multiple: true, required: false]
     def inputLockDevices = [name: "lockdevices", type: "capability.lock", title: "Which locks?", multiple: true, required: false]
     def inputAlarmDevices = [name: "alarmdevices", type: "capability.alarm", title: "Which alarms/sirens?", multiple: true, required: false]
     def inputSwitchDevices = [name: "switchdevices", type: "capability.switch", title: "Which switches?", multiple: true, required: false]
-    def inputPresenceDevices = [name: "presencedevices", type: "capability.presenceSensor", title: "Which presence sensors?", multiple: true, required: false]
-    def inputSmokeDevices = [name: "smokedevices", type: "capability.smokeDetector", title: "Which Smoke/CO2 detectors?", multiple: true, required: false]
+    /*def inputThermoDevices = [name: "thermodevices", type: "capability.thermostat", title: "Which thermostats?", multiple: true, required: false]
     def inputButtonDevices = [name: "buttondevices", type: "capability.button", title: "Which Button Devices?", multiple: true, required: false]
+    def inputSmokeDevices = [name: "smokedevices", type: "capability.smokeDetector", title: "Which Smoke/CO2 detectors?", multiple: true, required: false]
+    def inputHumidityDevices = [name: "humiditydevices", type: "capability.relativeHumidityMeasurement", title: "Which humidity sensors?", multiple: true, required: false]
+    def inputLeakDevices = [name: "leakdevices", type: "capability.waterSensor", title: "Which leak sensors?", multiple: true, required: false]
     def inputHubDevices = [name: "hubdevices", type: "hub", title: "Which SmartThings Hubs?", multiple: true, required: false]
-    
+*/
     def endpoint = [name: "endpoint", type: "text", title: "OSH SOS-T endpoint URL", multiple: false, required: true]
 
     def pageProperties = [name: "pageConfigure",
@@ -70,14 +70,14 @@ def pageConfigure() {
             input inputContactDevices
             input inputLockDevices
             input inputSwitchDevices
-            input inputHumidityDevices
+            input inputTemperature
+            /*input inputHumidityDevices
             input inputLeakDevices
             input inputThermoDevices
-            input inputTemperature
             input inputAlarmDevices
             input inputPresenceDevices
             input inputSmokeDevices
-            input inputButtonDevices
+            input inputButtonDevices*/
             //input inputHubDevices
             
             // Input OSH SOS-T endpoint
