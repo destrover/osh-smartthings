@@ -23,8 +23,8 @@ definition(
         iconUrl: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience.png",
         iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png",
         iconX3Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png")
-        
-        //OSH Related settings
+
+//OSH Related settings
 
 
 preferences {
@@ -79,7 +79,7 @@ def pageConfigure() {
             input inputSmokeDevices
             input inputButtonDevices*/
             //input inputHubDevices
-            
+
             // Input OSH SOS-T endpoint
             input endpoint
         }
@@ -118,14 +118,14 @@ def pageStatus(params) {
 }
 
 def installed() {
-    log.debug "Installed with settings: ${settings}"
+    //log.debug "Installed with settings: ${settings}"
 
 
     initialize()
 }
 
 def updated() {
-    log.debug "Updated with settings: ${settings}"
+    //log.debug "Updated with settings: ${settings}"
 
     unsubscribe()
     initialize()
@@ -197,7 +197,7 @@ def generateInsertSML(String sensorName){
 
 
 def generateDescriptionSML(theSensor, capability) {
-    String sensorName = theSensor
+    String sensorName = removeSpaces(theSensor.getLabel())
     //log.trace "[ln:201]Capability genDescription: " + currCapability
     def xmlDescBeginning = '''<?xml version="1.0" encoding="UTF-8"?>
 <sos:InsertResultTemplate service="SOS" version="2.0"
@@ -244,11 +244,11 @@ def generateDescriptionSML(theSensor, capability) {
     def xmlDesc = generateResultTag(theSensor, capability) // take a capability instead
     log.trace "[ln:246] xmldesc: " + xmlDesc
     if (xmlDesc != null || xmlDesc != ""){
-    	def requestSML = xmlDescBeginning + xmlDesc + xmlDescEnd
+        def requestSML = xmlDescBeginning + xmlDesc + xmlDescEnd
         //log.debug "[ln:249]Generated Result Template: " + requestSML
-    	return requestSML
+        return requestSML
     }
-        // TODO: Test cases where this branch happens
+    // TODO: Test cases where this branch happens
     else {return null}
 }
 
@@ -261,7 +261,7 @@ String generateResultTag(sensor, capability){
     def capConversion = atomicState.capConversion
     //def caps = sensor2Caps.getAt(removeSpaces(sensor.getLabel()))
     def caps = new ArrayList()
-    log.debug "[ln: 262] Capability List init: " + caps
+    //log.debug "[ln: 262] Capability List init: " + caps
 
     log.info "[ln:264]Capability Name: " + capability
     switch (capability)
@@ -419,7 +419,7 @@ String generateResultTag(sensor, capability){
             //description += null
             break
 
-        //log.debug "[ln:370] Current Sensor Capabilites: " + capabilitieslist
+    //log.debug "[ln:370] Current Sensor Capabilites: " + capabilitieslist
     }
 
     /*log.debug "[ln:372] Generated Field Tags: " + description
@@ -500,7 +500,7 @@ def generateSML(){
                 def params = [
                         //uri: 'http://146.148.39.135:8181/sensorhub/sos',
                         uri: endpoint,
-                        body: generateInsertSML(x.getLabel()),
+                        body: generateInsertSML(removeSpaces(x.getLabel())),
                         requestContentType: 'application/xml'
                 ]
                 insertSensor(params)
@@ -558,7 +558,7 @@ def insertResultTemplate(sensorName) {
                     String data = resp2.data
 
                     if(data != "Unable to read SWE Common data") {
-                        log.debug "[ln 512] URI: " + data
+                        //log.debug "[ln 512] URI: " + data
                         sensorURIs.put(capability.getName(), data)
                     }
                 }
@@ -569,27 +569,19 @@ def insertResultTemplate(sensorName) {
     }
 
     log.trace 'Sensor to cap to uri map data: ' +  URIs
-    log.info "529 - sensor label: " + sensorName.getLabel()
+    log.info "529 - sensor label: " + removeSpaces(sensorName.getLabel())
     URIs.put(removeSpaces(sensorName.getLabel()), sensorURIs)
     atomicState.URIs = URIs
-    log.debug "Current URI map: " + atomicState.URIs
+    //log.debug "Current URI map: " + atomicState.URIs
 }
 
 
 // remove spaces in sensor labels
 def removeSpaces(label){
-	/*def label2 = label.split(" ")
-	log.debug "Label: " + label2
-    def replacement = ""
-    log.debug "Init replacement: " + replacement
-    
-    for(x in label2){
-    	replacement += x
-        log.debug replacement
-    }
-    log.debug "Label replacement: " + replacement
-    return replacement*/
-    return label
+    def label2 = label
+    label2 = label2.replaceAll("\\s", "")
+    log.debug "-----New Label: " + label2 + "-----"
+    return label2
 }
 
 def addTimeRecord(){
@@ -616,16 +608,16 @@ def scheduleHandler(){
             for (sensor in n){
 
                 for (capability in sensorMap.getAt(removeSpaces(sensor.getLabel()))) {
-                    log.debug "****Current Capability: " + capability.getKey() + "****"
-                    log.debug "****Current uri: " + capability.getValue() + "****"
+                    //log.debug "****Current Capability: " + capability.getKey() + "****"
+                    //log.debug "****Current uri: " + capability.getValue() + "****"
 
                     //get current time
-                    log.debug "Current time: " + now()
+                    //log.debug "Current time: " + now()
                     def currDate = new Date(now())
-                    log.debug "Current date: " + currDate
+                    //log.debug "Current date: " + currDate
                     String stringDate = currDate
                     def time = getOSHDate(stringDate)
-                    log.debug time
+                    //log.debug time
                     String dataString = sensor.currentValue(capabilityConversion.getAt(capability.getKey()))
 
                     try {
@@ -639,14 +631,14 @@ def scheduleHandler(){
                                 requestContentType: 'application/xml'
                         ]
 
-                        log.debug "Insert Observation Request: " + request.body
+                        //log.debug "Insert Observation Request: " + request.body
 
                         httpPost(request) { resp2 ->
                             resp2.headers.each {
                                 //log.info "${it.name} : ${it.value}"
                             }
                             //log.debug "response contentType: ${resp2.contentType}"
-                            log.debug "response data: ${resp2.data}"
+                            //log.debug "response data: ${resp2.data}"
                         }
                     } catch (e) {
                         log.error "Sending Data failed: $e"
@@ -660,28 +652,28 @@ def scheduleHandler(){
 
 // schedule data polling (is executed on event)
 def scheduleHandler(evt){
-    log.debug "Event name: ${evt.name}"
-    log.debug "Event value: ${evt.value}"
-    log.debug "Event device: ${evt.device}"
+    //log.debug "Event name: ${evt.name}"
+    //log.debug "Event value: ${evt.value}"
+    //log.debug "Event device: ${evt.device}"
 
     def device = removeSpaces(evt.device.getLabel())
     def eventName = evt.name
     def dataString = evt.value
     def capabilities = atomicState.capConversion
-    log.debug "Device map" + atomicState.URIs.getAt(device)
+    //log.debug "Device map" + atomicState.URIs.getAt(device)
     def deviceMap = atomicState.URIs.getAt(device)
     def properCapName
     capabilities.each{key, value -> if(value == eventName){properCapName = key}}
     def uri = deviceMap.getAt(properCapName)
-    log.debug "URI retrieved: " + uri
+    //log.debug "URI retrieved: " + uri
 
     //get current time
-    log.debug "Current time: " + now()
+    //log.debug "Current time: " + now()
     def currDate = new Date(now())
-    log.debug "Current date: " + currDate
+    //log.debug "Current date: " + currDate
     String stringDate = currDate
     def time = getOSHDate(stringDate)
-    log.debug time
+    //log.debug time
 
     try {
         def request = [
@@ -694,14 +686,14 @@ def scheduleHandler(evt){
                 requestContentType: 'application/xml'
         ]
 
-        log.debug "Result Request: " + request.body
+        //log.debug "Result Request: " + request.body
 
         httpPost(request) { resp2 ->
             resp2.headers.each {
                 //log.info "${it.name} : ${it.value}"
             }
             //log.debug "response contentType: ${resp2.contentType}"
-            log.debug "response data: ${resp2.data}"
+            //log.debug "response data: ${resp2.data}"
         }
     } catch (e) {
         log.error "Sending Data failed: $e"
