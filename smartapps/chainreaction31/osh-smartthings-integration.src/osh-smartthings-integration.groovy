@@ -615,8 +615,6 @@ def scheduleHandler(){
 }
 
 
-// TODO: determine if there's a way to get the capability that triggered the even without resorting to versions for each type of capability (THERE IS)
-// TODO: could possibly have the capability doing the trigger passed in as a string (may be able to parse event.getData() or getName() for the info)
 // schedule data polling (is executed on event)
 def scheduleHandler(evt){
     log.debug "Event name: ${evt.name}"
@@ -626,9 +624,12 @@ def scheduleHandler(evt){
     def device = removeSpaces(evt.device.getLabel())
     def eventName = evt.name
     def dataString = evt.value
+    def capabilities = atomicState.capConversion
     log.debug "Device map" + atomicState.URIs.getAt(device)
     def deviceMap = atomicState.URIs.getAt(device)
-    def uri = deviceMap.getAt(eventName)
+    def properCapName
+    capabilities.each{key, value -> if(value == eventName){properCapName = key}}
+    def uri = deviceMap.getAt(properCapName)
     log.debug "URI retrieved: " + uri
 
     //get current time
