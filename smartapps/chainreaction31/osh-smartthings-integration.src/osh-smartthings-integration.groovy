@@ -384,6 +384,19 @@ String generateResultTag(sensor, capability){
             capConversion.put(capability, "battery")
             break
 
+        case "Sound Pressure Level":
+            description += '''<swe:DataRecord><swe:description>''' + capability + "</swe:description>"
+            description += addTimeRecord()
+            description += '''<swe:field name="soundPressureLevel">
+            <swe:Quantity definition="http://sensorml.com/ont/swe/property/SoundPressureLevel">
+            <swe:label>Sound Pressure Level</swe:label>
+            </swe:Quantity>
+            </swe:field>
+            </swe:DataRecord>
+            '''
+            capConversion.put(capability, "soundPressureLevel")
+            break
+
         default:
             //description += null
             break
