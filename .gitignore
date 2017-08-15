@@ -1,6 +1,2 @@
-
-*.iml
-
-smartapps/chainreaction31/\.idea/
-
-\.idea/
+**/.idea
+**/.iml
