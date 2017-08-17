@@ -55,6 +55,9 @@ def pageConfigure() {
 */
     def endpoint = [name: "endpoint", type: "text", title: "OSH SOS-T endpoint URL", multiple: false, required: true]
 
+    def supportedSensors = ["Motion Sensor", "Contact Sensor", "Temperature Measurement", "Battery", "Switch", "Lock", "Alarm",
+    "Presence Sensor", "Sound Sensor", "Sound Pressure Level"]
+
     def pageProperties = [name: "pageConfigure",
                           title: "Device Monitor - Select Devices",
                           nextPage: null,
