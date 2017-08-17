@@ -15,7 +15,7 @@
  */
 
 definition(
-        name: "OSH SmartThings Integration",
+        name: "OSH SmartThings Integration (WIP GEOHSV)",
         namespace: "OSH",
         author: "Ian Patterson",
         description: "Integrate SmartThings into OpenSensorHub.",
@@ -190,8 +190,8 @@ def generateInsertSML(sensor){
     </swes:metadata>
 </swes:InsertSensor>'''
 
-    def fullXMLBody = beginningXML + removeSpaces(sensor.getLabel()) + endingXML
-    //log.info fullXMLBody
+    def fullXMLBody = beginningXML + sensor.getId() + endingXML
+    log.info fullXMLBody
     return fullXMLBody
 }
 
@@ -208,7 +208,7 @@ def generateDescriptionSML(theSensor, capability) {
     xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <sos:proposedTemplate>
         <sos:ResultTemplate>
-            <sos:offering>urn:osh:client:''' + sensorName + '''-sos</sos:offering>
+            <sos:offering>urn:osh:client:''' + theSensor.getId() + '''-sos</sos:offering>
             <sos:observationTemplate>
                 <om:OM_Observation gml:id="OBS_001">
                     <om:phenomenonTime>
@@ -531,7 +531,8 @@ def insertSensor(params) {
 
 // Handle inserting a sensor's result template via SOS-T
 def insertResultTemplate(sensorName) {
-
+// TODO: add map of supported capablities
+// TODO: add logic to check that capability is supported here
     def URIs = atomicState.URIs
     //
     def sensorURIs = [:]
