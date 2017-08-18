@@ -55,7 +55,7 @@ def pageConfigure() {
 */
     def endpoint = [name: "endpoint", type: "text", title: "OSH SOS-T endpoint URL", multiple: false, required: true]
 
-    def supportedSensors = ["Motion Sensor", "Contact Sensor", "Temperature Measurement", "Battery", "Switch", "Lock", "Alarm",
+    atomicState.supportedSensors = ["Motion Sensor", "Contact Sensor", "Temperature Measurement", "Battery", "Switch", "Lock", "Alarm",
     "Presence Sensor", "Sound Sensor", "Sound Pressure Level"]
 
     def pageProperties = [name: "pageConfigure",
@@ -534,40 +534,42 @@ def insertSensor(params) {
 
 // Handle inserting a sensor's result template via SOS-T
 def insertResultTemplate(sensorName) {
-// TODO: add map of supported capablities
-// TODO: add logic to check that capability is supported here
+
     def URIs = atomicState.URIs
     //
     def sensorURIs = [:]
     log.trace "[ln:541]sensorCapability (insertResultTemplate): " + sensorName.getCapabilities()
 
     for(capability in  sensorName.getCapabilities()) {
-        def generatedBody = generateDescriptionSML(sensorName, capability)
-        //log.debug "[ln:498] generated body: " + generatedBody
-        if(generatedBody != null) {
-            try {
-                def paramsRequest = [
-                        //uri: 'http://146.148.39.135:8181/sensorhub/sos',
-                        uri               : endpoint,
-                        body              : generatedBody,
-                        requestContentType: 'application/xml'
-                ]
-                httpPost(paramsRequest) { resp2 ->
-                    resp2.headers.each {
-                        //log.info "${it.name} : ${it.value}"
+        // TODO: add logic to check that capability is supported here
+        if(atomicState.supportedSensors.contains(capability)) {
+            def generatedBody = generateDescriptionSML(sensorName, capability)
+            //log.debug "[ln:498] generated body: " + generatedBody
+            if (generatedBody != null) {
+                try {
+                    def paramsRequest = [
+                            //uri: 'http://146.148.39.135:8181/sensorhub/sos',
+                            uri               : endpoint,
+                            body              : generatedBody,
+                            requestContentType: 'application/xml'
+                    ]
+                    httpPost(paramsRequest) { resp2 ->
+                        resp2.headers.each {
+                            //log.info "${it.name} : ${it.value}"
+                        }
+
+                        //log.debug "[ln:506] Insert Sensor Result Template Response data: ${resp2.data}"
+
+                        String data = resp2.data
+
+                        if (data != "Unable to read SWE Common data") {
+                            //log.debug "[ln 512] URI: " + data
+                            sensorURIs.put(capability.getName(), data)
+                        }
                     }
-
-                    //log.debug "[ln:506] Insert Sensor Result Template Response data: ${resp2.data}"
-
-                    String data = resp2.data
-
-                    if(data != "Unable to read SWE Common data") {
-                        //log.debug "[ln 512] URI: " + data
-                        sensorURIs.put(capability.getName(), data)
-                    }
+                } catch (e) {
+                    log.error "Inserting Request Template failed: $e"
                 }
-            } catch (e) {
-                log.error "Inserting Request Template failed: $e"
             }
         }
     }
